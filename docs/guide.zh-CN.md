@@ -10,7 +10,7 @@ Revilens 是 DeepSeek Reviewer 从 v1.5.0 起的新名称。新命令是 `revile
 
 ## 一次安装
 
-本页适用于已批准发布的 **v1.5.0**。请从 [v1.5.0 发行页](https://github.com/liyunhui0707/revilens/releases/tag/v1.5.0)下载配套文件；旧版不一定支持下列全部命令。旧版用户可参考其[固定版本说明](https://github.com/liyunhui0707/revilens/blob/v1.0.0/docs/guide.zh-CN.md)及本页的升级步骤。
+本页适用于已发布的 **v1.5.0**。请从 [v1.5.0 发行页](https://github.com/liyunhui0707/revilens/releases/tag/v1.5.0)下载配套文件；旧版不一定支持下列全部命令。旧版用户可参考其[固定版本说明](https://github.com/liyunhui0707/revilens/blob/v1.0.0/docs/guide.zh-CN.md)及本页的升级步骤。
 
 需要 macOS、Python 3.11+、Codex，以及自行通过官方渠道安装的 Claude Code **2.1.312 或 2.1.325**。2.1.325 已通过离线兼容检查及一次两文件真实验收：DeepSeek 自主搜索、读取材料并返回有效最终报告，退出码 0。该结果仅覆盖这次有限调用，不保证每次完成、意见正确或覆盖完整；详见[验收记录](verification.md#authorized-v141--claude-21325-narrow-live-acceptance-pass)。早期真实验收使用 2.1.312。本软件不打包或修改这些工具。下载同一 [GitHub Release](https://github.com/liyunhui0707/revilens/releases/latest) 的 `revilens.pyz` 和 `revilens-SHA256SUMS`，在下载目录执行：
 
