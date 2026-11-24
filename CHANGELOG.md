@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0 — Revilens
+
+- Rename the product, repository, primary CLI and Codex Skill to Revilens / `revilens`. Retain `deepseek-reviewer` as a compatibility command and legacy release assets for existing updaters.
+- Safely rename only unchanged managed Skills; reject customizations, duplicate installations and unsafe paths, and preserve explicit restore. Both CLI names share the same atomic activation state and rollback.
+- Preserve private data, reports, consent records, runtime registration, Keychain service/account and the internal `deepseek_reviewer` module. No credential read, credential migration, paid request or historical-record rewrite is part of renaming.
+- Security permissions, budget limits, single-attempt execution and provider/model routing are unchanged. This naming release does not add a new model or live acceptance.
+
 ## 1.4.1
 
 - Explicitly support existing Claude Code 2.1.325 alongside 2.1.312; record the inspected version while retaining exact executable fingerprints, required safety flags and confirmation-bound registration replacement. Unknown versions still stop.

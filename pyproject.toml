@@ -1,6 +1,6 @@
 [project]
-name = "deepseek-reviewer"
-version = "1.4.1"
+name = "revilens"
+version = "1.5.0"
 description = "Independent DeepSeek code reviews from Codex, using restricted Claude Code on macOS"
 requires-python = ">=3.11"
 license = "MIT"
@@ -8,11 +8,11 @@ authors = [{name = "liyunhui0707"}]
 dependencies = []
 
 [project.urls]
-Repository = "https://github.com/liyunhui0707/deepseek-reviewer"
-Issues = "https://github.com/liyunhui0707/deepseek-reviewer/issues"
+Repository = "https://github.com/liyunhui0707/revilens"
+Issues = "https://github.com/liyunhui0707/revilens/issues"
 
 # Releases use the standard-library zipapp builder; no package manager is required.
-[tool.deepseek-reviewer]
+[tool.revilens]
 tested-claude = "2.1.312"
 offline-compatible-claude = ["2.1.312", "2.1.325"]
 release-command = "python3 scripts/build.py"

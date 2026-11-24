@@ -1,4 +1,4 @@
-# Working on DeepSeek Reviewer
+# Working on Revilens
 
 This is the public, portable product. Keep historical audit records, private
 review snapshots, credentials and machine-specific paths out of this repository.

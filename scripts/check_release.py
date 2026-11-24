@@ -10,9 +10,12 @@ import tempfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-archive = ROOT / 'dist/deepseek-reviewer.pyz'
-manifest = json.loads((ROOT / 'dist/release.json').read_text())
+archive = ROOT / 'dist/revilens.pyz'
+manifest = json.loads((ROOT / 'dist/revilens-release.json').read_text())
 assert hashlib.sha256(archive.read_bytes()).hexdigest() == manifest['sha256']
+assert archive.read_bytes() == (ROOT / 'dist/deepseek-reviewer.pyz').read_bytes()
+legacy = json.loads((ROOT / 'dist/release.json').read_text())
+assert legacy == {**manifest, 'file': 'deepseek-reviewer.pyz'}
 with zipfile.ZipFile(archive) as z:
     assert not any(name.endswith('.pyc') or '__pycache__' in name or '.review-' in name for name in z.namelist())
     assert 'deepseek_reviewer/skill/SKILL.md' in z.namelist()
@@ -20,11 +23,13 @@ with zipfile.ZipFile(archive) as z:
 with tempfile.TemporaryDirectory(prefix='reviewer-install-check-') as d:
     env = {'HOME': str(Path(d).resolve()), 'PATH': '/usr/bin:/bin'}
     subprocess.run([sys.executable, str(archive), 'install'], env=env, check=True, capture_output=True)
-    command = Path(env['HOME']) / '.local/bin/deepseek-reviewer'
+    command = Path(env['HOME']) / '.local/bin/revilens'
     assert subprocess.check_output([str(command), '--version'], env=env).decode().strip() == manifest['version']
     subprocess.run([str(command), 'install-skill'], env=env, check=True, capture_output=True)
-    skill = Path(env['HOME']) / '.codex/skills/deepseek-reviewer/SKILL.md'
+    skill = Path(env['HOME']) / '.codex/skills/revilens/SKILL.md'
     assert skill.is_file()
+    assert not (Path(env['HOME']) / '.codex/skills/deepseek-reviewer').exists()
+    assert subprocess.check_output([str(Path(env['HOME']) / '.local/bin/deepseek-reviewer'), '--version'], env=env).decode().strip() == manifest['version']
     repeated = subprocess.run([str(command), 'install-skill'], env=env, capture_output=True)
     assert repeated.returncode != 0
     doctor = subprocess.run([str(command), 'doctor'], env=env, capture_output=True)

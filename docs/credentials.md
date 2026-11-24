@@ -12,13 +12,13 @@ Run these commands yourself in an interactive Terminal. Never append a key, expo
 
 ```sh
 # First enrollment; stops if the item already exists.
-~/.local/bin/deepseek-reviewer credentials save
+~/.local/bin/revilens credentials save
 
 # Replace the key using the same native hidden prompt.
-~/.local/bin/deepseek-reviewer credentials replace
+~/.local/bin/revilens credentials replace
 
 # Delete only this product's local credential item.
-~/.local/bin/deepseek-reviewer credentials remove
+~/.local/bin/revilens credentials remove
 ```
 
 The native `security add-generic-password` prompt reads the key directly. The command checks the default Keychain's **path only** and uses `-T ""`; it never uses `-A`, a key argument, or a broad trusted-application entry. Cancel with Ctrl-C rather than submitting an empty key. After enrollment/replacement, inspect this item's Access Control in Keychain Access without showing the password: “Allow all applications” should be off and the always-allowed application list empty.
@@ -32,3 +32,5 @@ Stop active reviews before replacement/removal. Removing the local item does not
 No real credential is read during `doctor`, `prepare`, installation, updates or the offline test suite.
 
 `setup` also leaves credentials untouched. `LOCAL_READY` is a registration result, not an authentication result. Saving/replacing/removing credentials refuses to overlap an active review or maintenance operation. A setup rerun never replaces your key; use the explicit credential command when you intend to change it.
+
+Revilens retains these original Keychain identifiers for compatibility. Renaming the CLI does not copy a credential, change access controls or require re-enrollment.

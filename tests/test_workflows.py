@@ -84,7 +84,7 @@ class WorkflowTests(unittest.TestCase):
                     config.preview_registration(self.claude)
 
     def test_skill_update_preserves_user_edits_and_supports_restore(self):
-        target = config.home() / '.codex/skills/deepseek-reviewer/SKILL.md'
+        target = config.home() / '.codex/skills/revilens/SKILL.md'
         with patch.object(distribution, 'bundled_skill', return_value=self.bundle()):
             distribution.install_skill()
         with patch.object(distribution, 'bundled_skill', return_value=self.bundle('two')):
@@ -101,7 +101,7 @@ class WorkflowTests(unittest.TestCase):
     def test_skill_extra_file_is_not_silently_overwritten(self):
         with patch.object(distribution, 'bundled_skill', return_value=self.bundle()):
             distribution.install_skill()
-            (config.home() / '.codex/skills/deepseek-reviewer/custom.md').write_text('custom')
+            (config.home() / '.codex/skills/revilens/custom.md').write_text('custom')
             with self.assertRaisesRegex(AgentStopped, 'skill_modified_or_unmanaged'):
                 distribution.install_skill(update=True)
 
@@ -117,7 +117,7 @@ class WorkflowTests(unittest.TestCase):
             with self.assertRaisesRegex(AgentStopped, 'skill_update_incomplete'):
                 distribution.install_skill(update=True)
         distribution.restore_skill()
-        target = config.home() / '.codex/skills/deepseek-reviewer/SKILL.md'
+        target = config.home() / '.codex/skills/revilens/SKILL.md'
         self.assertEqual(target.read_bytes(), self.bundle()['SKILL.md'])
         target.write_text('new user customization')
         with self.assertRaisesRegex(AgentStopped, 'skill_modified_or_unmanaged'):

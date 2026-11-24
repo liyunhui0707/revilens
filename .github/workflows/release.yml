@@ -27,4 +27,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REQUESTED_VERSION: ${{ inputs.version }}
-        run: gh release create "v$REQUESTED_VERSION" dist/deepseek-reviewer.pyz dist/SHA256SUMS dist/release.json --target "$GITHUB_SHA" --title "DeepSeek Reviewer $REQUESTED_VERSION" --notes-file CHANGELOG.md
+        run: gh release create "v$REQUESTED_VERSION" dist/revilens.pyz dist/revilens-SHA256SUMS dist/revilens-release.json dist/deepseek-reviewer.pyz dist/SHA256SUMS dist/release.json --target "$GITHUB_SHA" --title "Revilens $REQUESTED_VERSION" --notes-file CHANGELOG.md

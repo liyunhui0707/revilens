@@ -34,7 +34,7 @@ class InstallInstructionTests(unittest.TestCase):
             root = Path(d).resolve(); binary = root / 'bin'; binary.mkdir()
             product = root / '.local/bin'; product.mkdir(parents=True)
             commands = [(binary / 'shasum', 'checksum'), (binary / 'python3', 'python'),
-                        (product / 'deepseek-reviewer', 'reviewer')]
+                        (product / 'revilens', 'reviewer')]
             for path, name in commands:
                 path.write_text('#!/bin/sh\n' + f'printf "%s\\n" "{name} $*" >> "$TRACE_FILE"\n'
                                 + f'if [ "$FAIL_COMMAND" = "{name}" ]; then exit 9; fi\n')
@@ -67,7 +67,7 @@ class InstallInstructionTests(unittest.TestCase):
                 self.assertEqual(code, 0)
                 self.assertTrue(trace)
                 self.assertTrue(all(t.split()[0] in ('checksum', 'python', 'reviewer') for t in trace))
-                if 'deepseek-reviewer ' in block:
+                if 'revilens ' in block:
                     code, trace = self.run_block(block, 'reviewer')
                     self.assertEqual(code, 9)
                     self.assertEqual(sum(t.startswith('reviewer') for t in trace), 1)

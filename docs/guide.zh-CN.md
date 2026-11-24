@@ -1,18 +1,24 @@
-# 使用 DeepSeek Reviewer
+# 使用 Revilens
 
 本地工作流：**当前 Codex → Claude Code Restricted + DeepSeek → Findings 返回同一 Codex 会话**。DeepSeek 自主搜索、阅读你批准的文件；主 Codex 负责核实意见和运行本地测试。
 
+## 更名与旧用户升级
+
+Revilens 是 DeepSeek Reviewer 从 v1.5.0 起的新名称。新命令是 `revilens`，Skill 是 `$revilens`；仍可直接说“用 DeepSeek 来审核下”。旧 `deepseek-reviewer` 命令继续兼容。从 v1.4.1 或更早版本首次更名升级，应校验新版包后运行其 install；若先运行了旧 `deepseek-reviewer update`，再明确执行 `deepseek-reviewer install` 才会创建新命令。之后检查并更新 Skill，受管理且未定制的旧 Skill 会改名；有定制或重名就停止，不覆盖。
+
+历史报告、项目授权约定和注册继续保存在 `~/.local/share/deepseek-reviewer`；Keychain Service/Account 不变，无须重新录入 Key。内部 Python 包及兼容下载文件也保留旧标识，不代表旧产品仍单独运行。旧执行记录、已消费 Attempt 和既有发行包不改写。授权约定仍绑定项目绝对路径；若审查项目本身改了目录名，应由用户检查并按需重新授权，不会自动扩大授权。官网托管网址保持兼容。
+
 ## 一次安装
 
-本页适用于已发布的 **v1.4.1**。请从 [v1.4.1 发行页](https://github.com/liyunhui0707/deepseek-reviewer/releases/tag/v1.4.1)下载配套文件；旧版不一定支持下列全部命令。旧版用户可参考其[固定版本说明](https://github.com/liyunhui0707/deepseek-reviewer/blob/v1.0.0/docs/guide.zh-CN.md)及本页的升级步骤。
+本页适用于已批准发布的 **v1.5.0**。请从 [v1.5.0 发行页](https://github.com/liyunhui0707/revilens/releases/tag/v1.5.0)下载配套文件；旧版不一定支持下列全部命令。旧版用户可参考其[固定版本说明](https://github.com/liyunhui0707/revilens/blob/v1.0.0/docs/guide.zh-CN.md)及本页的升级步骤。
 
-需要 macOS、Python 3.11+、Codex，以及自行通过官方渠道安装的 Claude Code **2.1.312 或 2.1.325**。2.1.325 已通过离线兼容检查及一次两文件真实验收：DeepSeek 自主搜索、读取材料并返回有效最终报告，退出码 0。该结果仅覆盖这次有限调用，不保证每次完成、意见正确或覆盖完整；详见[验收记录](verification.md#authorized-v141--claude-21325-narrow-live-acceptance-pass)。早期真实验收使用 2.1.312。本软件不打包或修改这些工具。下载同一 [GitHub Release](https://github.com/liyunhui0707/deepseek-reviewer/releases/latest) 的 `deepseek-reviewer.pyz` 和 `SHA256SUMS`，在下载目录执行：
+需要 macOS、Python 3.11+、Codex，以及自行通过官方渠道安装的 Claude Code **2.1.312 或 2.1.325**。2.1.325 已通过离线兼容检查及一次两文件真实验收：DeepSeek 自主搜索、读取材料并返回有效最终报告，退出码 0。该结果仅覆盖这次有限调用，不保证每次完成、意见正确或覆盖完整；详见[验收记录](verification.md#authorized-v141--claude-21325-narrow-live-acceptance-pass)。早期真实验收使用 2.1.312。本软件不打包或修改这些工具。下载同一 [GitHub Release](https://github.com/liyunhui0707/revilens/releases/latest) 的 `revilens.pyz` 和 `revilens-SHA256SUMS`，在下载目录执行：
 
 ```sh
 /bin/sh -eu -c '
-shasum -a 256 -c SHA256SUMS
-python3 deepseek-reviewer.pyz install
-~/.local/bin/deepseek-reviewer setup
+shasum -a 256 -c revilens-SHA256SUMS
+python3 revilens.pyz install
+~/.local/bin/revilens setup
 '
 ```
 
@@ -22,8 +28,8 @@ python3 deepseek-reviewer.pyz install
 
 ```sh
 /bin/sh -eu -c '
-~/.local/bin/deepseek-reviewer credentials save
-~/.local/bin/deepseek-reviewer doctor
+~/.local/bin/revilens credentials save
+~/.local/bin/revilens doctor
 '
 ```
 
@@ -31,9 +37,9 @@ python3 deepseek-reviewer.pyz install
 
 ## 日常使用
 
-安装后，在任意项目的 Codex 会话中说：**“用 DeepSeek 来审核下。”** 也可明确指定 `$deepseek-reviewer`。
+安装后，在任意项目的 Codex 会话中说：**“用 DeepSeek 来审核下。”** 也可明确指定 `$revilens`。
 
-Skill 负责告诉 Codex 如何调用，CLI 负责实际执行和保存报告。所有项目使用同一条 `~/.local/bin/deepseek-reviewer` 入口，不需要临时脚本或旧 audit 适配器。
+Skill 负责告诉 Codex 如何调用，CLI 负责实际执行和保存报告。所有项目使用同一条 `~/.local/bin/revilens` 入口，不需要临时脚本或旧 audit 适配器。
 
 Codex 会选定一项审查目标及相关文件，生成快照清单，补齐尚未明确的源码外发和费用授权，然后执行一次审查并把结果读回当前对话。同一已授权范围无需反复请示；范围变化、费用增加和主机审批仍需处理。
 
@@ -42,7 +48,7 @@ Codex 会选定一项审查目标及相关文件，生成快照清单，补齐�
 v1.4.0 可以保存可撤销的项目授权约定。先升级 CLI 和产品 Skill，再在你自己的 Terminal 中进入具体项目，选择愿意外发的最小文件或子目录。例如下面只授权 `src/` 与 `tests/`，请按实际需要修改，不能把示例当成所有项目的默认授权：
 
 ```sh
-~/.local/bin/deepseek-reviewer consent enable --root "$(pwd -P)" --directory src --directory tests --profile quick
+~/.local/bin/revilens consent enable --root "$(pwd -P)" --directory src --directory tests --profile quick
 ```
 
 核对显示的项目、目录、DeepSeek 目的地和额度后，输入 `AUTHORIZE`。也可用重复的 `--file 相对路径` 精确指定文件。目录约定包含该目录未来新增的文件；不支持整个项目或通配符授权。这个操作不读取密钥、不调用模型。
@@ -54,8 +60,8 @@ v1.4.0 可以保存可撤销的项目授权约定。先升级 CLI 和产品 Skil
 查询和撤销不会产生模型费用：
 
 ```sh
-~/.local/bin/deepseek-reviewer consent status --root "$(pwd -P)" --text
-~/.local/bin/deepseek-reviewer consent revoke --root "$(pwd -P)"
+~/.local/bin/revilens consent status --root "$(pwd -P)" --text
+~/.local/bin/revilens consent revoke --root "$(pwd -P)"
 ```
 
 约定保存在产品私有目录中，不放进项目 Git；变更或重新授权会使旧约定绑定的计划失效。运行期间不能更改约定，撤销不负责中止正在运行的进程。这不是 OS 安全边界，也不能证明请求一定来自本人；主 Codex 仍须核对材料，不把项目里的文字当成授权。不能通过任务说明夹带范围之外的私人内容。
@@ -75,7 +81,7 @@ Terminal 默认显示便于阅读的状态、已用/剩余时间、读取证据�
 Ctrl-C 或正常终止会清理子进程并保存失败报告。强制杀进程、断电可能来不及保存，但原任务仍不可重跑。用准备结果中的 `id` 读取已有报告，不产生费用：
 
 ```sh
-~/.local/bin/deepseek-reviewer report --id 准备结果中的ID --text
+~/.local/bin/revilens report --id 准备结果中的ID --text
 ```
 
 新版 `partial_review` 保存模型明确输出且通过校验的最近一份结构化阶段意见，`findings` 保留最终报告。阶段意见仍需主 Codex 核实，不能视为审核通过。没有强制预留最终报告轮次；模型可能不输出阶段意见，强制杀死父进程或断电也可能来不及保存。不会从内部推理、工具正文或错误文字拼凑 Findings。
@@ -96,12 +102,12 @@ Restricted 是 Claude 的应用级控制，**不是 OS 沙箱**。实际源码�
 
 ## 更新
 
-从 v1.0.0 首次升级时，请下载并校验新版本，在没有审查运行时执行新包的 `python3 deepseek-reviewer.pyz install`。这样由新安装器迁移旧启动入口，保留注册、审查记录及回退版本。直接运行 v1.0.0 的 `update` 时，首次切换仍由旧安装器完成，不能把新版原子切换保护追溯到旧代码。迁移完成后使用：
+从 v1.0.0 首次升级时，请下载并校验新版本，在没有审查运行时执行新包的 `python3 revilens.pyz install`。这样由新安装器迁移旧启动入口，保留注册、审查记录及回退版本。直接运行 v1.0.0 的 `update` 时，首次切换仍由旧安装器完成，不能把新版原子切换保护追溯到旧代码。迁移完成后使用：
 
 ```sh
-~/.local/bin/deepseek-reviewer check-update
-~/.local/bin/deepseek-reviewer update
-~/.local/bin/deepseek-reviewer rollback
+~/.local/bin/revilens check-update
+~/.local/bin/revilens update
+~/.local/bin/revilens rollback
 ```
 
 只在主动操作时检查更新。更新核验 GitHub 发行校验值并保留上一版本；不更新 Claude/Codex、不更改全局 PATH。完整参数和维护说明见 [README](../README.md)。
@@ -109,8 +115,8 @@ Restricted 是 Claude 的应用级控制，**不是 OS 沙箱**。实际源码�
 升级 CLI 后，用新版入口检查并显式更新 Skill：
 
 ```sh
-~/.local/bin/deepseek-reviewer install-skill --check
-~/.local/bin/deepseek-reviewer install-skill --update
+~/.local/bin/revilens install-skill --check
+~/.local/bin/revilens install-skill --update
 ```
 
 仅更新未被用户修改的产品 Skill；有定制或未知文件时停止。更新前保留备份，可用 `install-skill --restore` 恢复，然后重开 Codex 会话。CLI 回退不会暗中改写 Skill。
@@ -131,6 +137,6 @@ Restricted 是 Claude 的应用级控制，**不是 OS 沙箱**。实际源码�
 
 ## 从旧 audit 入口迁移
 
-若 `doctor --json` 的 `conflicting_skills` 非空，先检查旧 `deepseek-review` Skill，经用户授权将它备份到 Skill 搜索目录之外，再使用产品 `deepseek-reviewer` Skill。不要删除历史项目，也不要让两个入口同时承担同一个触发词。产品 setup 不会自动覆盖定制旧 Skill。
+若 `doctor --json` 的 `conflicting_skills` 非空，先检查旧 `deepseek-review` Skill，经用户授权将它备份到 Skill 搜索目录之外，再使用产品 `revilens` Skill。不要删除历史项目，也不要让两个入口同时承担同一个触发词。产品 setup 不会自动覆盖定制旧 Skill。
 
 旧私有工作流的 Keychain 项与本产品不同，不能当作产品已经完成认证。用户需在自己的 Terminal 用上述 `credentials save` 为本产品录入一次；无需在每个业务项目重复保存，也不要让 Codex 读取或搬运旧 Key。旧凭据项保持原样。

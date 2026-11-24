@@ -18,6 +18,8 @@ from .safety import scan_secrets, ReviewError
 
 TESTED_CLAUDE = '2.1.312'
 SUPPORTED_CLAUDE = (TESTED_CLAUDE, '2.1.325')
+# Stable pre-Revilens identities: never rename/copy credentials or private state
+# as a side effect of changing the public product and command names.
 SERVICE = 'io.github.liyunhui0707.deepseek-reviewer'
 ACCOUNT = 'deepseek-reviewer'
 ENDPOINT = 'https://api.deepseek.com/anthropic'

@@ -13,6 +13,7 @@ from .safety import ReviewError
 
 
 HINTS = {
+    'revilens_command_missing_run_legacy_install': 'Run deepseek-reviewer install to finish the renamed command, then revilens install-skill --update. No review started.',
     'consent_requires_terminal': 'Enroll project consent in your own interactive Terminal after reviewing scope and limits. Do not auto-confirm it from an agent.',
     'consent_cancelled': 'No agreement saved. Nothing was sent and no credential was read.',
     'consent_missing': 'No project agreement exists. Obtain task-specific disclosure/cost authorization, or enroll one in your own Terminal.',
@@ -27,7 +28,7 @@ HINTS = {
     'review_checkpoint_missing': 'Historical experimental no-opinion stop. It did not deliver a report; do not relaunch automatically.',
     'invalid_review_report': 'The client ended, but did not deliver a valid assessment, findings and coverage report. Execution success is not review success.',
     'unsupported_plan': 'Prepare a new plan and confirm its exact scope and delivery policy. Older plans are not silently reinterpreted; saved reports remain readable.',
-    'runtime_missing_or_unsafe_run_configure': 'Run deepseek-reviewer setup. If a registration exists, inspect it; do not delete it to bypass checks.',
+    'runtime_missing_or_unsafe_run_configure': 'Run revilens setup. If a registration exists, inspect it; do not delete it to bypass checks.',
     'claude_not_found': 'Install Claude Code from its official publisher, then run setup --claude /absolute/path/to/the/compatible/binary.',
     'unsupported_claude_version': 'Use the documented compatible Claude version. This tool never silently upgrades or downgrades Claude.',
     'registered_claude_changed': 'Stop reviews. Run configure --claude PATH --check; approve the verified replacement before configure --replace.',
@@ -187,7 +188,7 @@ def progress_notice(value, format):
 
 
 def parser():
-    p = argparse.ArgumentParser(prog='deepseek-reviewer', description='Independent, read-only DeepSeek reviews through Claude Code on macOS.')
+    p = argparse.ArgumentParser(prog='revilens', description='Independent, read-only DeepSeek reviews through Claude Code on macOS.')
     p.add_argument('--version', action='version', version=__version__)
     formats = p.add_mutually_exclusive_group()
     formats.add_argument('--json', dest='output_format', action='store_const', const='json')

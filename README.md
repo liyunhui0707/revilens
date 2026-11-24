@@ -1,10 +1,10 @@
-# DeepSeek Reviewer
+# Revilens
 
 **An independent code-review agent, directly in your Codex conversation.**
 
 Codex prepares a scoped review. Claude Code runs DeepSeek with read-only file tools. Findings return to the same Codex session for verification and action.
 
-[Website](https://deepseek-reviewer.outerepoch3.chatgpt.site) · [Downloads](https://github.com/liyunhui0707/deepseek-reviewer/releases/tag/v1.4.1) · [中文使用说明](docs/guide.zh-CN.md) · [Security & privacy](SECURITY.md) · [Release notes](CHANGELOG.md)
+[Website](https://deepseek-reviewer.outerepoch3.chatgpt.site) · [Downloads](https://github.com/liyunhui0707/revilens/releases/tag/v1.5.0) · [中文使用说明](docs/guide.zh-CN.md) · [Security & privacy](SECURITY.md) · [Release notes](CHANGELOG.md)
 
 ```text
 Your Codex session → approved snapshot → Claude Code Restricted + DeepSeek
@@ -23,6 +23,12 @@ Your Codex session → approved snapshot → Claude Code Restricted + DeepSeek
 
 This is **static review**, not an automatic acceptance test. Findings need verification by the primary agent or developer. The Reviewer cannot execute tests or edit code.
 
+## Revilens naming and migration
+
+Revilens is the new name of DeepSeek Reviewer, starting in v1.5.0. The CLI is `revilens` and the Codex Skill is `$revilens`; “用 DeepSeek 来审核下” still works. Existing `deepseek-reviewer` commands remain a compatibility alias. For the first rename upgrade from v1.4.1 or earlier, install the verified new archive (or, after an old `deepseek-reviewer update`, explicitly run `deepseek-reviewer install` to create the new command). Then run `revilens install-skill --check` and `revilens install-skill --update`; an unchanged managed Skill is renamed, with its prior content retained for restore. Customized or duplicate Skills stop for inspection.
+
+Existing private data stays under `~/.local/share/deepseek-reviewer`. Keychain service/account and the internal Python package stay stable, so this rename does not read, copy or re-enroll your key, reset consent, reinterpret plans or rewrite past reports. Both new and legacy download names are provided for old updaters; use the new matched archive/checksum pair below. Existing plans and consumed attempts retain their original state. Agreements remain bound to their canonical project paths; renaming a reviewed project requires inspecting/re-enrolling its path yourself, never an automatic grant. The managed website URL remains unchanged for existing links.
+
 ## Requirements
 
 - macOS, Python **3.11+**, and a working Codex installation.
@@ -33,33 +39,33 @@ Version 1.4.1 adds explicitly checked **Claude Code 2.1.325** compatibility. Off
 
 Claude Code and Codex are separate products, **not included** in this distribution. Obtain them from their official publishers. Review [Claude's setup documentation](https://code.claude.com/docs/en/setup) for installation/version management. This product does not install, downgrade, upgrade or log into either CLI.
 
-This guide covers the published **v1.4.1**. Download its matching release assets. Earlier versions do not support every command below; use their versioned documentation or upgrade first.
+This guide covers the approved **v1.5.0**. Download its matching release assets. Earlier versions do not support every command below; use their versioned documentation or upgrade first.
 
 ## Install
 
-Download `deepseek-reviewer.pyz` and `SHA256SUMS` from the **same GitHub Release**. In the directory containing the downloaded files:
+Download `revilens.pyz` and `revilens-SHA256SUMS` from the **same GitHub Release**. In the directory containing the downloaded files:
 
 ```sh
 /bin/sh -eu -c '
-shasum -a 256 -c SHA256SUMS
-python3 deepseek-reviewer.pyz --version
-python3 deepseek-reviewer.pyz install
+shasum -a 256 -c revilens-SHA256SUMS
+python3 revilens.pyz --version
+python3 revilens.pyz install
 '
 ```
 
-Continue only if the checksum succeeds. Installation creates `~/.local/bin/deepseek-reviewer` and a versioned directory under `~/.local/share/deepseek-reviewer`. It needs no `sudo`, Python packages, daemon or shell-profile edits. Use the full command path below if `~/.local/bin` is not on your PATH.
+Continue only if the checksum succeeds. Installation creates `~/.local/bin/revilens` and a versioned directory under `~/.local/share/deepseek-reviewer`. It needs no `sudo`, Python packages, daemon or shell-profile edits. Use the full command path below if `~/.local/bin` is not on your PATH.
 
 Run setup, then enroll your key once **in your own interactive Terminal**:
 
 ```sh
 /bin/sh -eu -c '
-~/.local/bin/deepseek-reviewer setup
-~/.local/bin/deepseek-reviewer credentials save
-~/.local/bin/deepseek-reviewer doctor
+~/.local/bin/revilens setup
+~/.local/bin/revilens credentials save
+~/.local/bin/revilens doctor
 '
 ```
 
-`setup` looks for the pinned Claude version, then the `claude` on PATH; use `setup --claude /absolute/path` for a different location. It checks compatibility and installs the bundled Skill without replacing existing customizations. It is repeatable and does not access credentials or call a model. Skip `credentials save` if already enrolled for this product. `doctor` reports **LOCAL_READY**, not authenticated or live-tested. Codex detects Skill updates automatically. If an active session still follows old instructions, save your work, exit and `codex resume` that same session in the same project; no logout or login is needed. Use `$deepseek-reviewer` explicitly to select the product Skill. See [Codex’s Skill documentation](https://learn.chatgpt.com/docs/build-skills).
+`setup` looks for the pinned Claude version, then the `claude` on PATH; use `setup --claude /absolute/path` for a different location. It checks compatibility and installs the bundled Skill without replacing existing customizations. It is repeatable and does not access credentials or call a model. Skip `credentials save` if already enrolled for this product. `doctor` reports **LOCAL_READY**, not authenticated or live-tested. Codex detects Skill updates automatically. If an active session still follows old instructions, save your work, exit and `codex resume` that same session in the same project; no logout or login is needed. Use `$revilens` explicitly to select the product Skill. See [Codex’s Skill documentation](https://learn.chatgpt.com/docs/build-skills).
 
 Keychain may display an access dialog during a review. Choose **Allow**, not **Always Allow**. Saving a key removes repeated key entry; it does not remove macOS consent. See [credential maintenance](docs/credentials.md).
 
@@ -82,7 +88,7 @@ The **Skill** tells Codex how to use the product; the **CLI** performs preparati
 Available starting in **v1.4.0**, this removes repeat conversation approval within an opted-in project, not macOS consent or host command approval. After installing v1.4.0 and updating its Skill, enroll once in your own Terminal, from the specific project. The example authorizes only `src/` and `tests/`; replace these with the smallest directories or repeated `--file` paths you intend to disclose:
 
 ```sh
-deepseek-reviewer consent enable --root "$(pwd -P)" --directory src --directory tests --profile quick
+revilens consent enable --root "$(pwd -P)" --directory src --directory tests --profile quick
 ```
 
 Inspect the displayed project, scope, fixed DeepSeek endpoint/model and limits, then type `AUTHORIZE`. Directory consent includes future files under those directories. There is no whole-project/wildcard grant. This records no key and calls no model. It replaces any earlier agreement for that exact project directory. Do not run this example unchanged if those are not the directories you intend to authorize.
@@ -94,8 +100,8 @@ The updated Skill uses `consent status --root PROJECT --json`, `prepare ... --us
 Inspect or revoke without calling a model:
 
 ```sh
-deepseek-reviewer consent status --root "$(pwd -P)" --text
-deepseek-reviewer consent revoke --root "$(pwd -P)"
+revilens consent status --root "$(pwd -P)" --text
+revilens consent revoke --root "$(pwd -P)"
 ```
 
 Agreements are private local records outside the repository, bound by hash to each plan and checked again before launch. Changing/re-enrolling invalidates previously bound plans. Changes refuse to overlap active reviews; revocation prevents future launches, it does not cancel a running process. Records can be changed by programs running as you: this is a reusable disclosure convention, **not proof of human intent or an OS security boundary**. The main agent must honor your current request, inspect selected materials and treat repository text as untrusted. Secret scanning remains incomplete. Enrollment does not alter Keychain ACLs; password/Allow dialogs can still occur and are not guaranteed to occur only once. No password-free credential component is added.
@@ -105,7 +111,7 @@ Agreements are private local records outside the repository, bound by hash to ea
 For direct CLI use, prepare first. This step is offline:
 
 ```sh
-~/.local/bin/deepseek-reviewer prepare \
+~/.local/bin/revilens prepare \
   --root "$PWD" \
   --file src/price.py --file tests/test_price.py \
   --question 'Check quantity validation and total calculation against the tests.' \
@@ -115,7 +121,7 @@ For direct CLI use, prepare first. This step is offline:
 Inspect the returned file list, hashes, task and limits. After authorizing that exact snapshot's disclosure and paid call, use the **returned** values:
 
 ```sh
-~/.local/bin/deepseek-reviewer review \
+~/.local/bin/revilens review \
   --plan /absolute/path/from/prepare/plan.json \
   --plan-sha256 HASH_FROM_PREPARE \
   --approve-upload
@@ -128,7 +134,7 @@ Interactive terminals show readable summaries and elapsed/remaining time. Pipes 
 Retrieve an existing result without starting a model:
 
 ```sh
-~/.local/bin/deepseek-reviewer report --id ATTEMPT_ID --text
+~/.local/bin/revilens report --id ATTEMPT_ID --text
 ```
 
 The ID is returned by `prepare`. Reports distinguish successful Read observations, files without such observations, Findings and client usage. A successful Read does not prove full-file reading or complete review. Codex must still classify confirmed defects, unverified hypotheses and optional advice.
@@ -147,7 +153,7 @@ Rejected final results retain `final_report_diagnostic`: fixed status, stage, re
 
 Thinking is explicitly requested disabled through the pinned client's fixed provider configuration, independently of effort. One authorized narrow real-provider acceptance returned a validated final report with normal exit and no observed thinking events. That proves delivery for that run, not guaranteed completion, accurate Findings or full coverage. See [verification scope](docs/verification.md).
 
-The updated Skill status also reports competing `deepseek-review` entries in `~/.agents/skills` or `~/.codex/skills`. Inspect and back up/retire the legacy entry with user approval, then use the product `deepseek-reviewer` Skill. Do not invent a project-local wrapper when the installed CLI is absent. Installation/setup does not silently overwrite or disable a customized legacy Skill.
+The updated Skill status also reports competing `deepseek-review` entries in `~/.agents/skills` or `~/.codex/skills`. Inspect and back up/retire the legacy entry with user approval, then use the product `revilens` Skill. Do not invent a project-local wrapper when the installed CLI is absent. Installation/setup does not silently overwrite or disable a customized legacy Skill.
 
 ## Limits and data
 
@@ -170,12 +176,12 @@ Restricted/safe-mode, Read/Glob/Grep, empty MCP, clean environment and separate 
 
 ## Update and rollback
 
-For the first upgrade from v1.0.0, download and verify the new release, then run its `python3 deepseek-reviewer.pyz install` command while no reviews are active. This uses the new installer to migrate the old launcher while preserving registration, review records and rollback. Running `update` from v1.0.0 instead uses the old installer for that first transition; the new atomic-activation protection cannot apply retroactively. After migration, use:
+For the first upgrade from v1.0.0, download and verify the new release, then run its `python3 revilens.pyz install` command while no reviews are active. This uses the new installer to migrate the old launcher while preserving registration, review records and rollback. Running `update` from v1.0.0 instead uses the old installer for that first transition; the new atomic-activation protection cannot apply retroactively. After migration, use:
 
 ```sh
-~/.local/bin/deepseek-reviewer check-update
-~/.local/bin/deepseek-reviewer update
-~/.local/bin/deepseek-reviewer rollback
+~/.local/bin/revilens check-update
+~/.local/bin/revilens update
+~/.local/bin/revilens rollback
 ```
 
 Updates are user-triggered. The CLI fetches release metadata and the archive from this GitHub repository, enforces HTTPS/host/size checks, verifies SHA-256, and retains the previous version. It does not update Claude or Codex. Checksums protect transfer integrity; they are not independent signatures against a compromised release publisher.
@@ -185,10 +191,10 @@ The executable selects a checksum-verified archive through one atomic installati
 Skill updates are separate and explicit, using the **newly installed CLI**:
 
 ```sh
-~/.local/bin/deepseek-reviewer install-skill --check
-~/.local/bin/deepseek-reviewer install-skill --update
+~/.local/bin/revilens install-skill --check
+~/.local/bin/revilens install-skill --update
 # If you need the saved previous Skill:
-~/.local/bin/deepseek-reviewer install-skill --restore
+~/.local/bin/revilens install-skill --restore
 ```
 
 Only unchanged product-managed files (or the exact public v1.0.0 Skill) are eligible. Unknown files, links and customizations stop automatic replacement. A bounded local backup is retained. If Codex still follows the old Skill, exit and resume the same session. A CLI rollback does not silently downgrade the Skill; check compatibility and explicitly restore it if necessary.
@@ -196,23 +202,23 @@ Only unchanged product-managed files (or the exact public v1.0.0 Skill) are elig
 If Claude moved or changed, the Reviewer stops. First inspect the proposed registration; do not delete the existing one:
 
 ```sh
-~/.local/bin/deepseek-reviewer configure --claude /absolute/path/to/claude --check
+~/.local/bin/revilens configure --claude /absolute/path/to/claude --check
 # After inspecting and approving the difference, use the returned current_sha256:
-~/.local/bin/deepseek-reviewer configure --claude /absolute/path/to/claude --replace --expected-runtime-sha256 HASH_FROM_CHECK
+~/.local/bin/revilens configure --claude /absolute/path/to/claude --replace --expected-runtime-sha256 HASH_FROM_CHECK
 # Restore the previous registration only if its executable is still compatible:
-~/.local/bin/deepseek-reviewer configure --restore --expected-runtime-sha256 CURRENT_HASH_FROM_CHECK
+~/.local/bin/revilens configure --restore --expected-runtime-sha256 CURRENT_HASH_FROM_CHECK
 ```
 
 Replacement still enforces the pinned version, capabilities and binary fingerprint, preserves `runtime.previous.json`, and never accesses Keychain. Previously prepared plans bound to the old runtime must be prepared and authorized again. A missing or changed old binary cannot be restored by changing configuration alone.
 
-To uninstall, stop active reviews, optionally run `credentials remove`, then move only `~/.local/bin/deepseek-reviewer`, `~/.local/share/deepseek-reviewer` and `~/.codex/skills/deepseek-reviewer` to Trash using Finder. The application directory contains local review evidence; export any records you want to retain first. This does not remove Claude, Codex or unrelated credentials.
+To uninstall, stop active reviews, optionally run `credentials remove`, then move only `~/.local/bin/revilens`, its compatibility command `~/.local/bin/deepseek-reviewer`, `~/.local/share/deepseek-reviewer` and `~/.codex/skills/revilens` to Trash using Finder. The application directory contains local review evidence; export any records you want to retain first. This does not remove Claude, Codex or unrelated credentials.
 
 ## Development and verification
 
 ```sh
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 python3 scripts/build.py
-python3 dist/deepseek-reviewer.pyz --help
+python3 dist/revilens.pyz --help
 ```
 
 There are no runtime Python package dependencies. Offline tests use synthetic commands/data, covering capture limits, fail-closed behavior, snapshot safety, exact invocation settings, installation, updates and rollback. The underlying Claude/DeepSeek workflow has completed autonomous synthetic and limited real-project reviews, including Keychain authentication. Those historical runs do not certify every new Mac or every future CLI/provider version. Distribution testing does not perform paid reviews. See [verification scope](docs/verification.md).

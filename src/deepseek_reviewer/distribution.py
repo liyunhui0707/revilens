@@ -16,7 +16,7 @@ from . import __version__
 from .config import app_home, private_directory, private_read, atomic_write, state_lock, home
 from .runner import AgentStopped, private_write
 
-RELEASES = 'https://github.com/liyunhui0707/deepseek-reviewer/releases'
+RELEASES = 'https://github.com/liyunhui0707/revilens/releases'
 MAX_DOWNLOAD = 20 * 1024 * 1024
 
 
@@ -53,8 +53,8 @@ def fetch(url, limit):
 
 
 def latest():
-    value = json.loads(fetch(RELEASES + '/latest/download/release.json', 16384))
-    if (set(value) != {'version', 'file', 'sha256'} or value['file'] != 'deepseek-reviewer.pyz'
+    value = json.loads(fetch(RELEASES + '/latest/download/revilens-release.json', 16384))
+    if (set(value) != {'version', 'file', 'sha256'} or value['file'] != 'revilens.pyz'
             or not re.fullmatch('[a-f0-9]{64}', value['sha256'])):
         raise AgentStopped('invalid_release_manifest')
     version_tuple(value['version'])
@@ -114,25 +114,29 @@ def _activate(version, archive_hash):
     binary_dir.mkdir(parents=True, exist_ok=True)
     if binary_dir.resolve() != binary_dir:
         raise AgentStopped('unsafe_binary_directory')
-    target = binary_dir / 'deepseek-reviewer'
+    targets = [binary_dir / name for name in ('deepseek-reviewer', 'revilens')]
     wrapper = _launcher(root)
-    if target.is_symlink(): raise AgentStopped('unsafe_install_target')
-    if target.exists() and not state_file.exists() and private_read(target, 16384) != wrapper:
-        raise AgentStopped('existing_unmanaged_command')
-    if target.exists() and current:
-        old_archive = root / 'releases' / current['version'] / 'deepseek-reviewer.pyz'
-        legacy = ('#!/bin/sh\nexec ' + shlex.join([str(Path(sys.executable).resolve()), str(old_archive)]) + ' "$@"\n').encode()
-        actual_hash = hashlib.sha256(private_read(target, 16384)).hexdigest()
-        expected_hash = current.get('launcher_sha256', hashlib.sha256(legacy).hexdigest())
-        if actual_hash not in (expected_hash, hashlib.sha256(wrapper).hexdigest()):
+    # Inspect both names before writing either. One activation record keeps the
+    # new command and compatibility alias on the same validated version.
+    for target in targets:
+        if target.is_symlink(): raise AgentStopped('unsafe_install_target')
+        if target.exists() and not state_file.exists() and private_read(target, 16384) != wrapper:
             raise AgentStopped('existing_unmanaged_command')
+        if target.exists() and current:
+            old_archive = root / 'releases' / current['version'] / 'deepseek-reviewer.pyz'
+            legacy = ('#!/bin/sh\nexec ' + shlex.join([str(Path(sys.executable).resolve()), str(old_archive)]) + ' "$@"\n').encode()
+            actual_hash = hashlib.sha256(private_read(target, 16384)).hexdigest()
+            expected_hash = current.get('launcher_sha256', hashlib.sha256(legacy).hexdigest())
+            if actual_hash not in (expected_hash, hashlib.sha256(wrapper).hexdigest()):
+                raise AgentStopped('existing_unmanaged_command')
     # Migrating the old fixed launcher first is safe: it still selects the old
     # valid state until the final atomic replacement succeeds. No two-file commit.
     state = {'version': version, 'sha256': archive_hash, 'previous': previous,
              'launcher_sha256': hashlib.sha256(wrapper).hexdigest()}
-    atomic_write(target, wrapper, 0o700)
+    for target in targets: atomic_write(target, wrapper, 0o700)
     atomic_write(state_file, (json.dumps(state) + '\n').encode(), 0o600)
-    return {'version': version, 'command': str(target), 'previous': previous}
+    return {'version': version, 'command': str(binary_dir / 'revilens'),
+            'compatibility_command': str(binary_dir / 'deepseek-reviewer'), 'previous': previous}
 
 
 def install_archive(path, version, expected_hash):
@@ -180,7 +184,7 @@ def _update():
         path = Path(directory) / manifest['file']
         private_write(path, body)
         installed = _install_archive(path, manifest['version'], manifest['sha256'])
-        return {**installed, 'next': 'Run deepseek-reviewer install-skill --check, then --update if needed. Claude registration and credentials are unchanged.'}
+        return {**installed, 'next': 'Run revilens install-skill --check, then --update if needed. Claude registration and credentials are unchanged.'}
 
 
 def rollback():
@@ -211,10 +215,17 @@ def _hashes(contents):
     return {n: hashlib.sha256(b).hexdigest() for n, b in contents.items()}
 
 
-def _skill_files():
-    target = home() / '.codex/skills/deepseek-reviewer'
-    if target.resolve() != target or target.is_symlink():
+def _skill_target():
+    targets = [home() / '.codex/skills' / name for name in ('revilens', 'deepseek-reviewer')]
+    if any(p.resolve() != p or p.is_symlink() for p in targets):
         raise AgentStopped('skill_modified_or_unmanaged')
+    present = [p for p in targets if p.exists()]
+    if len(present) > 1: raise AgentStopped('skill_modified_or_unmanaged')
+    return present[0] if present else targets[0]
+
+
+def _skill_files():
+    target = _skill_target()
     if not target.exists(): return None
     entries = list(target.rglob('*'))
     if (any(p.is_symlink() for p in entries)
@@ -232,23 +243,40 @@ def _skill_status():
     trusted = json.loads(private_read(receipt))['hashes'] if receipt.exists() else LEGACY_SKILL_HASHES
     if hashes != trusted:
         return {'status': 'MODIFIED_OR_UNMANAGED', 'next': 'Preserve your customization; automatic replacement is refused.'}
-    return {'status': 'CURRENT' if installed == desired else 'UPDATE_AVAILABLE',
+    return {'status': 'CURRENT' if installed == desired and _skill_target().name == 'revilens' else 'UPDATE_AVAILABLE',
             'installed_hashes': hashes, 'bundled_hashes': _hashes(desired)}
+
+
+def _command_migration_needed():
+    # Old updaters activate the new archive using their old installer, which
+    # cannot create a command name it has never known. Require an explicit
+    # invocation of the new installer before installing a Skill that uses it.
+    if not (app_home() / 'installation.json').exists(): return False
+    target = home() / '.local/bin/revilens'
+    return (target.is_symlink() or not target.is_file()
+            or private_read(target, 16384) != _launcher(app_home()))
 
 
 def skill_status():
     with state_lock(shared=True):
-        value = _skill_status()
+        value = ({'status': 'COMMAND_MIGRATION_REQUIRED',
+                  'next': 'Run deepseek-reviewer install to finish the renamed command, then revilens install-skill --update.'}
+                 if _command_migration_needed() else _skill_status())
         # Metadata only. A differently named legacy Skill can still win natural
         # language routing; CURRENT alone must not hide that competing entry.
-        value['conflicting_skills'] = [f'~/{folder}/deepseek-review' for folder in ('.agents/skills', '.codex/skills')
-            if (home() / folder / 'deepseek-review').exists() or (home() / folder / 'deepseek-review').is_symlink()]
+        value['conflicting_skills'] = [f'~/{folder}/{name}'
+            for folder, names in (('.agents/skills', ('deepseek-review', 'deepseek-reviewer', 'revilens')),
+                                  ('.codex/skills', ('deepseek-review',)))
+            for name in names
+            if (home() / folder / name).exists() or (home() / folder / name).is_symlink()]
         return value
 
 
 def install_skill(*, update=False):
     with state_lock():
-        target = home() / '.codex/skills/deepseek-reviewer'
+        if _command_migration_needed():
+            raise AgentStopped('revilens_command_missing_run_legacy_install')
+        target = _skill_target()
         desired = bundled_skill()
         current = _skill_files()
         if current is not None:
@@ -256,7 +284,7 @@ def install_skill(*, update=False):
             status = _skill_status()['status']
             if status == 'MODIFIED_OR_UNMANAGED': raise AgentStopped('skill_modified_or_unmanaged')
             if status == 'CURRENT': return {'status': 'CURRENT', 'installed': str(target)}
-            backup = {'before': {n: b.decode('utf-8') for n, b in current.items()},
+            backup = {'before': {n: b.decode('utf-8') for n, b in current.items()}, 'directory': target.name,
                       'after_hashes': _hashes(desired)}
             atomic_write(app_home() / 'skill.previous.json', json.dumps(backup).encode())
         else:
@@ -271,6 +299,10 @@ def install_skill(*, update=False):
             return {'status': 'INSTALLED', 'installed': str(target),
                     'note': 'Start a new Codex session to discover the skill.'}
         try:
+            if target.name == 'deepseek-reviewer':
+                renamed = target.with_name('revilens')
+                os.rename(target, renamed)
+                target = renamed
             for name, body in desired.items(): atomic_write(target / name, body)
             atomic_write(app_home() / 'skill-installation.json', json.dumps(
                 {'version': __version__, 'hashes': _hashes(desired)}).encode())
@@ -289,7 +321,14 @@ def restore_skill():
         current = _skill_files()
         if current is None or any(_hashes(current)[n] not in (_hashes(old)[n], backup['after_hashes'][n]) for n in old):
             raise AgentStopped('skill_modified_or_unmanaged')
-        target = home() / '.codex/skills/deepseek-reviewer'
+        target = _skill_target()
+        old_name = backup.get('directory', target.name)
+        if old_name not in ('revilens', 'deepseek-reviewer'):
+            raise AgentStopped('skill_modified_or_unmanaged')
+        restored = target.with_name(old_name)
+        if restored != target and (restored.exists() or restored.is_symlink()):
+            raise AgentStopped('skill_modified_or_unmanaged')
         for n, body in old.items(): atomic_write(target / n, body)
+        if restored != target: os.rename(target, restored)
         atomic_write(app_home() / 'skill-installation.json', json.dumps({'hashes': _hashes(old)}).encode())
-        return {'status': 'RESTORED', 'installed': str(target)}
+        return {'status': 'RESTORED', 'installed': str(restored)}

@@ -1,6 +1,6 @@
 # Security and privacy boundary
 
-DeepSeek Reviewer is a local static-review tool, not a hosted source repository or a security sandbox.
+Revilens is a local static-review tool, not a hosted source repository or a security sandbox.
 
 ## Before sending code
 
@@ -30,4 +30,4 @@ Only explicit `check-update`/`update` commands contact GitHub. Release hashes ve
 
 Installation activation uses a single atomic state replacement; the launcher checks the selected archive before execution. Maintenance uses a process lock and refuses to overlap reviews. Registration replacement requires the current configuration hash and a freshly verified compatible executable; a backup is kept. Skill updates accept only unchanged managed files or the exact original public v1.0.0 Skill, never arbitrary local customizations. These checks do not defend against a malicious process with the same user's access.
 
-Report a vulnerability through [GitHub private vulnerability reporting](https://github.com/liyunhui0707/deepseek-reviewer/security/advisories/new) when available. Otherwise open an issue requesting a private contact without posting exploit secrets, keys, private paths, review logs or source. Include version, safe reproduction and affected boundary.
+Report a vulnerability through [GitHub private vulnerability reporting](https://github.com/liyunhui0707/revilens/security/advisories/new) when available. Otherwise open an issue requesting a private contact without posting exploit secrets, keys, private paths, review logs or source. Include version, safe reproduction and affected boundary.
